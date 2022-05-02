@@ -1,11 +1,18 @@
 from bs4 import BeautifulSoup as bs
 import requests
-import sqlite3 as sq
+import rating
+import replacer
 
 URL = "https://dom.ria.com/uk/arenda-kvartir/kiev/"
-HOST = "https://dom.ria.com"
 HEADERS = {
     'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"}
+
+
+
+def clear_files():
+    open('final_dataset.csv', 'w').close()
+    open('flats.csv', 'w').close()
+    open('rating.csv', 'w').close()
 
 
 def gethtml(url, params):
@@ -16,6 +23,7 @@ def gethtml(url, params):
 def getcontent(html):
     soup = bs(html, 'html.parser')
     items = soup.find_all('section', class_='realty-item')
+    items = items[:-1] # removing last element with is not a real listing
     posts = []
     for item in items:
         posts.append({
@@ -51,7 +59,7 @@ def getcontent(html):
 
 def get_pages_count(html):
     soup = bs(html, 'html.parser')
-    pagination = soup.find_all('span', class_='page-item')
+    pagination = soup.find_all('a', class_='page-item button-border')
     print("PAGINATION: " + str(int(pagination[-2].find_next('a').get_text())))
     if pagination:
         return 5
@@ -65,59 +73,15 @@ def parse():
 
     if html.status_code == 200:
         posts = []
-        posts2 = []
         pages_count = get_pages_count(html.text)  # 1
-        print("pages_count" + str(pages_count))
+        print("pages_count: " + str(pages_count))
         for page in range(1, pages_count + 1):
             print(f'Parsing page {page} from {pages_count}...')
             html = gethtml(URL, params=f'?page={page}')
-            posts.append(getcontent(html.text))
-            posts2.extend(getcontent(html.text))
-        return posts, posts2
+            posts.extend(getcontent(html.text))
+        return posts
     else:
         print('Error')
-
-
-# def Db(posts):
-#     connection = sq.connect("posts2.db")
-#     cursor = connection.cursor()
-#
-#     cursor.execute("""CREATE TABLE posts_table(
-#     id INTEGER,
-#     rooms TEXT,
-#     link TEXT,
-#     price TEXT,
-#     area TEXT
-#     )""")
-#
-#     id = 1
-#     for post in posts:
-#         cursor.execute("INSERT INTO posts_table VALUES (?,?,?,?,?)", [id, post['rooms'],
-#                                                                       post['link'],
-#                                                                       post['price'],
-#                                                                       post['area']])
-#
-#         id = id + 1
-#
-#     connection.commit()
-#
-#     cursor.close()
-#     connection.close()
-#
-#
-# def Queries():
-#     connection = sq.connect("posts2.db")
-#     cursor = connection.cursor()
-#     cursor.execute(
-#         """select rooms, link, area, price from posts_table
-#
-#             """)
-#     rows = cursor.fetchall()
-#
-#     for row in rows:
-#         print(row)
-#     cursor.close()
-#     connection.close()
 
 
 def tocsv(posts):
@@ -131,10 +95,13 @@ def tocsv(posts):
 
 
 if __name__ == '__main__':
-    posts, posts2 = parse()
-    # for i in range(len(posts)):
-    #     print(f"{i+1} {str(len(posts[i]))}")
-    # print(posts2)
-    tocsv(posts2)
-    # Db(posts2)
-    # Queries()
+    clear_files()
+
+    posts = parse()
+    tocsv(posts)
+
+    ratinglist = rating.parse()
+    rating.tocsv(ratinglist)
+
+    replacer.make_final_dataset()
+

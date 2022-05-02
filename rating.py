@@ -1,15 +1,11 @@
 from bs4 import BeautifulSoup as bs
 import requests
-import sqlite3 as sq
 
 URL = "https://dom.ria.com/uk/rate-region-stat/15185/"
-HOST = "https://dom.ria.com"
-HEADERS = {
-    'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"}
+HEADERS = {'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"}
 
 
 def gethtml(url):
-    print(url)
     return requests.get(url, headers=HEADERS)
 
 
@@ -47,10 +43,10 @@ def tocsv(rating):
         with open("rating.csv", "a") as file:
             file.write(item)
 
-
-if __name__ == '__main__':
-    rating = parse()
-    tocsv(rating)
+#
+# if __name__ == '__main__':
+#     rating = parse()
+#     tocsv(rating)
 
 
 
