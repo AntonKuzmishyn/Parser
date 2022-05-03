@@ -23,7 +23,7 @@ def gethtml(url, params):
 def getcontent(html):
     soup = bs(html, 'html.parser')
     items = soup.find_all('section', class_='realty-item')
-    items = items[:-1] # removing last element with is not a real listing
+    items = items[:-1]  # removing last element with is not a real listing
     posts = []
     for item in items:
         posts.append({
@@ -89,7 +89,8 @@ def tocsv(posts):
         item = elem['rooms'][0] + ',' \
                + elem['area'].rstrip(' м²') + ',' \
                + elem['price'].rstrip(' грн').replace(' ', '') + ',' \
-               + elem['district'].rstrip(',') + '\n'
+               + elem['district'].rstrip(',') + ',' \
+               + "https://dom.ria.com" + elem['link'] + '\n'
         with open("flats.csv", "a") as file:
             file.write(item)
 
